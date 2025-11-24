@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+// Handles AI driving for opponent cars.
+// Supports two modes: following the player directly or following a graph of waypoints.
+// Includes simple car avoidance, overtaking behavior, and nitro usage on straights.
+
 public class CarAIHandler : MonoBehaviour
 {
     public enum AIMode { followPlayer, followWaypoints };
@@ -43,7 +47,6 @@ public class CarAIHandler : MonoBehaviour
         nitro = GetComponent<NitroAI>();
     }
 
-    // Start is called before the first frame update
     void Start()
     {
         previousWaypoint = currentWaypoint;
@@ -61,7 +64,6 @@ public class CarAIHandler : MonoBehaviour
         }
     }
 
-    // Update is called once per frame
     void FixedUpdate()
     {
         
@@ -82,7 +84,7 @@ public class CarAIHandler : MonoBehaviour
             }
 
             inputVector.x = TurnTowardTarget();
-            inputVector.y = ApplyThrottaleOrBreak(inputVector.x);
+            inputVector.y = ApplyThrottleOrBrake(inputVector.x);
 
         }
 
@@ -172,7 +174,7 @@ public class CarAIHandler : MonoBehaviour
 
         return steerAmount;
     }
-    float ApplyThrottaleOrBreak(float inputX) //Rework
+    float ApplyThrottleOrBrake(float inputX) 
     {
         if(carController.GetVelocityMagnitude() > maxSpeed)
         {
@@ -195,7 +197,7 @@ public class CarAIHandler : MonoBehaviour
         return 1.05f - Mathf.Abs(inputX) / 2.0f;
     }
 
-    Vector2 FindNearestPointOnLine(Vector2 lineStart, Vector2 lineEnd, Vector2 point) //Check if it is correct
+    Vector2 FindNearestPointOnLine(Vector2 lineStart, Vector2 lineEnd, Vector2 point)
     {
         Vector2 lineHeadingVector = lineEnd - lineStart;
 
@@ -210,7 +212,7 @@ public class CarAIHandler : MonoBehaviour
         return lineStart + lineHeadingVector * dotProd;
     }
 
-    bool IsCarsInfrontOfAICar(out Vector3 position, out Vector3 otherCarRightVector) //Rework and add alt lines
+    bool IsCarsInfrontOfAICar(out Vector3 position, out Vector3 otherCarRightVector) 
     {
         polyCollider2D.enabled = false;
         
@@ -238,7 +240,7 @@ public class CarAIHandler : MonoBehaviour
 
     }
 
-    void AvoidCars(Vector2 vectorToTarget, out Vector2 newVectorToTarget) //Rework
+    void AvoidCars(Vector2 vectorToTarget, out Vector2 newVectorToTarget) 
     {
         if(IsCarsInfrontOfAICar(out Vector3 otherCarPosition, out Vector3 otherCarRightVector))
         {
@@ -254,7 +256,7 @@ public class CarAIHandler : MonoBehaviour
 
             float avoidInfluence = 1.0f - driveToTargetInfluence;
 
-            avoidenceVectorLerped = Vector2.Lerp(avoidenceVectorLerped, avoidenceVectorLerped, Time.fixedDeltaTime * 4);
+            avoidenceVectorLerped = Vector2.Lerp(avoidenceVectorLerped, avoidenceVector, Time.fixedDeltaTime * 4);
 
             newVectorToTarget = vectorToTarget*driveToTargetInfluence + avoidenceVector*avoidInfluence;
             newVectorToTarget.Normalize();
